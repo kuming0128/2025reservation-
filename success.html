@@ -325,9 +325,6 @@
                 </div>
             </div>
 
-            <div id="top50Badge" class="top50-badge" style="display: none;">
-                🎁 前50名預約者 - 可獲得流動襪一雙
-            </div>
 
             <div class="ticket-section">
                 <h3 style="color: #FFD700; margin-bottom: 20px;">您的預約號碼牌</h3>
@@ -393,13 +390,30 @@
                 // 顯示預約資訊
                 document.getElementById('reservationNumber').textContent = reservation.number;
                 document.getElementById('reservationName').textContent = reservation.name;
-                document.getElementById('reservationColor').textContent = reservation.colorName;
+                
+                // 顯示預約顏色（支援複選）
+                let colorDisplay = '';
+                if (reservation.colorNames && Array.isArray(reservation.colorNames)) {
+                    // 新格式：多個顏色
+                    colorDisplay = reservation.colorNames.join('、');
+                } else if (reservation.colorName) {
+                    // 向後兼容：單個顏色或已連接的字符串
+                    colorDisplay = reservation.colorName;
+                } else if (reservation.color) {
+                    // 舊格式：只有顏色代碼
+                    const colorMap = {
+                        'silver': '太空銀',
+                        'blue': '太空藍',
+                        'pink': '太空粉',
+                        'purple': '電光紫',
+                        'gold': '流金'
+                    };
+                    colorDisplay = colorMap[reservation.color] || reservation.color;
+                }
+                document.getElementById('reservationColor').textContent = colorDisplay || '未選擇';
+                
                 document.getElementById('reservationSize').textContent = reservation.size;
                 document.getElementById('reservationTime').textContent = new Date(reservation.timestamp).toLocaleString('zh-TW');
-
-                if (reservation.isTop50) {
-                    document.getElementById('top50Badge').style.display = 'inline-block';
-                }
 
                 // 顯示號碼牌資訊
                 document.getElementById('ticketNumberLarge').textContent = reservation.number;
@@ -416,29 +430,17 @@
                 
                 document.getElementById('ticketOrderLarge').textContent = `預約順序：第 ${order} 位`;
                 
-                // 明確告知前50名資格
-                let top50Message = '';
-                if (reservation.isTop50) {
-                    top50Message = `
-                        <div style="background: linear-gradient(135deg, #FFD700, #FFA500); color: #000; padding: 20px; border-radius: 15px; margin: 20px 0; text-align: center; font-weight: bold; font-size: 18px; box-shadow: 0 5px 20px rgba(255, 215, 0, 0.5);">
-                            🎉 恭喜！您是前50名預約者 🎉<br>
-                            <span style="font-size: 16px; margin-top: 10px; display: block;">現場領取時可獲得「流動襪一雙」（價值 480 元）</span>
-                        </div>
-                    `;
-                } else {
-                    top50Message = `
-                        <div style="background: rgba(255, 255, 255, 0.1); color: #666; padding: 15px; border-radius: 10px; margin: 20px 0; text-align: center; font-size: 14px;">
-                            很遺憾，您不在前50名預約者名單中<br>
-                            但仍可於展覽現場購買限量鞋款
-                        </div>
-                    `;
-                }
-                
+                // 顯示預約資訊和說明
                 document.getElementById('ticketInfoLarge').innerHTML = `
-                    ${top50Message}
+                    <div style="background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.3); border-radius: 10px; padding: 15px; margin-bottom: 20px;">
+                        <div style="color: #333; font-size: 14px; line-height: 1.8;">
+                            <div style="margin-bottom: 10px;">✓ 現場以預約者為優先體驗，如未預約者需等候空檔時得以體驗。</div>
+                            <div>✓ 數量有限，以現場數量為主，如銷售完後可優先預訂。</div>
+                        </div>
+                    </div>
                     <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
                         <div><strong>姓名：</strong>${reservation.name}</div>
-                        <div><strong>顏色：</strong>${reservation.colorName}</div>
+                        <div><strong>顏色：</strong>${colorDisplay || reservation.colorName || '未選擇'}</div>
                         <div><strong>尺寸：</strong>${reservation.size}</div>
                         <div><strong>預約時間：</strong>${new Date(reservation.timestamp).toLocaleString('zh-TW')}</div>
                     </div>
