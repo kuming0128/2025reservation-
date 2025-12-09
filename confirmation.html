@@ -188,6 +188,86 @@
                 text-decoration: underline;
             }
 
+            .product-intro {
+                background: rgba(255, 255, 255, 0.03);
+                backdrop-filter: blur(20px);
+                border-radius: 30px;
+                padding: 40px;
+                border: 1px solid rgba(255, 215, 0, 0.2);
+                margin-top: 30px;
+            }
+
+            .product-intro h3 {
+                color: #FFD700;
+                font-size: 24px;
+                margin-bottom: 20px;
+                text-align: center;
+            }
+
+            .product-intro-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 30px;
+                align-items: center;
+                margin-bottom: 30px;
+            }
+
+            .product-intro-text {
+                color: #fff;
+                line-height: 1.8;
+                margin-bottom: 15px;
+            }
+
+            .product-tags {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+                margin-bottom: 15px;
+            }
+
+            .product-tag {
+                background: rgba(255, 215, 0, 0.2);
+                padding: 8px 15px;
+                border-radius: 20px;
+                font-size: 14px;
+                color: #FFD700;
+            }
+
+            .product-link {
+                display: inline-block;
+                background: linear-gradient(135deg, #FFD700, #FFA500);
+                color: #000;
+                padding: 12px 30px;
+                border-radius: 25px;
+                text-decoration: none;
+                font-weight: bold;
+                transition: all 0.3s ease;
+            }
+
+            .product-link:hover {
+                transform: scale(1.05);
+                box-shadow: 0 10px 40px rgba(255, 215, 0, 0.5);
+            }
+
+            .product-features {
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 15px;
+                padding: 20px;
+            }
+
+            .product-features p {
+                color: #999;
+                font-size: 14px;
+                margin-bottom: 10px;
+            }
+
+            .product-features ul {
+                color: #fff;
+                text-align: left;
+                line-height: 2;
+                padding-left: 20px;
+            }
+
             @media (max-width: 768px) {
                 .header h1 {
                     font-size: 28px;
@@ -195,6 +275,10 @@
                 
                 .reservation-number {
                     font-size: 22px;
+                }
+
+                .product-intro-grid {
+                    grid-template-columns: 1fr;
                 }
             }
         </style>
@@ -245,6 +329,39 @@
                 <button class="submit-btn" onclick="window.print()" style="margin-top: 20px;">列印號碼牌</button>
                 <a href="reservation.html" class="back-link">← 返回預約頁面</a>
             </div>
+
+            <div class="product-intro" id="productIntro" style="display: none;">
+                <h3>✨ Feebees Sock Sneakers 創始款赤足襪鞋</h3>
+                <div class="product-intro-grid">
+                    <div>
+                        <p class="product-intro-text">
+                            創始款赤足襪鞋，長距離跑步時，鞋面舒適不磨腳、可適應各種腳型。鞋底提供適當保護與緩衝的同時，保有絕佳的赤足腳感。
+                        </p>
+                        <div class="product-tags">
+                            <span class="product-tag">赤足</span>
+                            <span class="product-tag">輕量</span>
+                            <span class="product-tag">包覆</span>
+                            <span class="product-tag">彈性</span>
+                            <span class="product-tag">訓練跑</span>
+                        </div>
+                        <a href="https://www.feebees.com.tw/categories/original-gradient" target="_blank" class="product-link">
+                            了解更多產品詳情 →
+                        </a>
+                    </div>
+                    <div style="text-align: center;">
+                        <div class="product-features">
+                            <p>產品特色</p>
+                            <ul>
+                                <li>✓ 舒適不磨腳的鞋面設計</li>
+                                <li>✓ 適應各種腳型</li>
+                                <li>✓ 適當保護與緩衝</li>
+                                <li>✓ 絕佳的赤足腳感</li>
+                                <li>✓ 適合長距離跑步</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <script>
@@ -263,6 +380,7 @@
 
                 document.getElementById('errorMessage').style.display = 'none';
                 document.getElementById('resultSection').style.display = 'block';
+                document.getElementById('productIntro').style.display = 'block';
 
                 // 顯示預約資訊
                 document.getElementById('resultNumber').textContent = reservation.number;
