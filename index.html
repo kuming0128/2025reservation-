@@ -863,14 +863,13 @@
             });
         });
 
-        // 生成預約編號
+        // 生成預約編號（簡單序號格式：001, 002, 003...）
         function generateReservationNumber() {
-            const date = new Date();
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-            return `MR${year}${month}${day}-${random}`;
+            const reservations = JSON.parse(localStorage.getItem('reservations') || '[]');
+            // 獲取下一個序號（現有預約數量 + 1）
+            const nextNumber = reservations.length + 1;
+            // 格式化為三位數（001, 002, 003...）
+            return String(nextNumber).padStart(3, '0');
         }
 
         // 表單提交
