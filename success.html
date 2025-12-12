@@ -339,7 +339,7 @@
 
             <div class="action-buttons">
                 <button class="btn btn-primary" onclick="window.print()">列印號碼牌</button>
-                <a href="index.html" class="btn btn-secondary">返回預約頁面</a>
+                <a href="index.html" class="btn btn-secondary">返回首頁</a>
                 <a href="confirmation.html" class="btn btn-secondary">查詢預約</a>
             </div>
 
@@ -405,6 +405,7 @@
                         'silver': '太空銀',
                         'blue': '太空藍',
                         'pink': '太空粉',
+                        'all': '我想體驗其他款式',
                         'purple': '電光紫',
                         'gold': '流金'
                     };
@@ -442,6 +443,7 @@
                         <div><strong>姓名：</strong>${reservation.name}</div>
                         <div><strong>顏色：</strong>${colorDisplay || reservation.colorName || '未選擇'}</div>
                         <div><strong>尺寸：</strong>${reservation.size}</div>
+                        <div><strong>我有其他想說的：</strong>${reservation.comments || '無'}</div>
                         <div><strong>預約時間：</strong>${new Date(reservation.timestamp).toLocaleString('zh-TW')}</div>
                     </div>
                 `;
