@@ -355,6 +355,30 @@
             color: white;
         }
 
+        .form-textarea {
+            width: 100%;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 100px;
+            transition: all 0.3s ease;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: #FFD700;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .form-textarea::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
         .bonus-info {
             background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.2));
             border: 1px solid rgba(255, 215, 0, 0.4);
@@ -621,6 +645,10 @@
                 <img src="4 colors shoes/太空粉.png" alt="太空粉" class="color-preview">
                 <div class="color-name">太空粉</div>
             </div>
+            <div class="color-card" data-color="all" data-color-name="我想體驗其他款式">
+                <img src="4 colors shoes/不限款式.jpg" alt="我想體驗其他款式" class="color-preview">
+                <div class="color-name">我想體驗其他款式</div>
+            </div>
         </div>
 
         <div class="product-intro">
@@ -647,6 +675,20 @@
             <p style="color: #fff; font-size: 32px; font-weight: bold; margin: 10px 0;">NT$ 3,000</p>
             <p style="color: #999; font-size: 18px; margin-top: 10px; text-decoration: line-through;">未來預計售價：NT$ 3,200</p>
             <p style="color: #FFD700; font-size: 16px; font-weight: 600; margin-top: 10px;">售完為止</p>
+        </div>
+
+        <div class="bonus-info" style="background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 140, 0, 0.15)); backdrop-filter: blur(20px); border-radius: 20px; padding: 25px; border: 2px solid rgba(255, 215, 0, 0.4); margin-bottom: 30px;">
+            <h3 style="color: #FFD700; font-size: 22px; font-weight: bold; margin-bottom: 15px; text-align: center;">🎁 預約客優惠資訊</h3>
+            <p style="color: #fff; font-size: 16px; line-height: 1.8; margin-bottom: 20px; text-align: center;">
+                預約到場購買任一鞋款，即贈以下好禮三選一：
+            </p>
+            <div style="background: rgba(0, 0, 0, 0.2); border-radius: 15px; padding: 20px; margin-top: 15px;">
+                <ul style="color: #fff; line-height: 2.5; padding-left: 20px; list-style: none; margin: 0;">
+                    <li style="margin-bottom: 12px; font-size: 16px;">✓ <strong style="color: #FFD700;">流動衣</strong>（價值750元）</li>
+                    <li style="margin-bottom: 12px; font-size: 16px;">✓ <strong style="color: #FFD700;">輕壓縮襪</strong>（價值400元）</li>
+                    <li style="margin-bottom: 0; font-size: 16px;">✓ <strong style="color: #FFD700;">修護乳</strong>（價值550元）</li>
+                </ul>
+            </div>
         </div>
 
         <div class="important-notice" style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); border-radius: 20px; padding: 25px; border: 1px solid rgba(255, 215, 0, 0.2); margin-bottom: 30px;">
@@ -686,13 +728,14 @@
                 <div class="form-group">
                     <label class="form-label">尺寸 *</label>
                     <select class="form-select" id="size" name="size" required>
-                        <option value="">請選擇尺寸</option>
-                        <option value="25#">25#</option>
-                        <option value="26#">26#</option>
-                        <option value="27#">27#</option>
-                        <option value="28#">28#</option>
+                        <option value="">請先選擇顏色</option>
                     </select>
                     <div class="error-message" id="size-error">請選擇尺寸</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">我有其他想說的</label>
+                    <textarea class="form-textarea" id="comments" name="comments" placeholder="如果沒有請寫「無」即可"></textarea>
                 </div>
 
                 <button type="submit" class="submit-btn" id="submitBtn">立即預約</button>
@@ -785,6 +828,55 @@
         setInterval(updateCountdown, 1000);
         updateCountdown();
 
+        // 更新尺寸選項根據選擇的顏色
+        function updateSizeOptions() {
+            const sizeSelect = document.getElementById('size');
+            const currentValue = sizeSelect.value;
+            
+            // 定義各顏色的可用尺寸
+            const colorSizes = {
+                'silver': ['23#', '24#', '25#', '26#', '27#', '28#'], // 太空銀
+                'blue': ['23#', '24#', '25#', '26#', '27#', '28#'],   // 太空藍
+                'pink': ['23#', '24#', '25#', '26#', '27#'],          // 太空粉
+                'all': ['23#', '24#', '25#', '26#', '27#', '28#']     // 我想體驗其他款式（顯示所有尺寸）
+            };
+            
+            // 如果沒有選擇顏色，清空尺寸選項
+            if (selectedColors.length === 0) {
+                sizeSelect.innerHTML = '<option value="">請先選擇顏色</option>';
+                return;
+            }
+            
+            // 收集所有可選尺寸（並集）
+            const availableSizes = new Set();
+            selectedColors.forEach(color => {
+                if (colorSizes[color]) {
+                    colorSizes[color].forEach(size => availableSizes.add(size));
+                }
+            });
+            
+            // 將尺寸排序
+            const sortedSizes = Array.from(availableSizes).sort((a, b) => {
+                return parseInt(a) - parseInt(b);
+            });
+            
+            // 更新尺寸選項
+            sizeSelect.innerHTML = '<option value="">請選擇尺寸</option>';
+            sortedSizes.forEach(size => {
+                const option = document.createElement('option');
+                option.value = size;
+                option.textContent = size;
+                sizeSelect.appendChild(option);
+            });
+            
+            // 如果之前選擇的尺寸仍然可用，則保持選擇
+            if (currentValue && sortedSizes.includes(currentValue)) {
+                sizeSelect.value = currentValue;
+            } else {
+                sizeSelect.value = '';
+            }
+        }
+
         // 顏色選擇（複選）
         const colorCards = document.querySelectorAll('.color-card');
         let selectedColors = []; // 改為數組，支援多選
@@ -808,6 +900,9 @@
                 // 更新隱藏欄位（用逗號分隔）
                 document.getElementById('selectedColor').value = selectedColors.join(',');
                 document.getElementById('color-error').style.display = 'none';
+                
+                // 更新尺寸選項
+                updateSizeOptions();
             });
         });
 
@@ -911,8 +1006,12 @@
                 });
             });
 
-            // 檢查每個選擇的顏色是否有庫存
+            // 檢查每個選擇的顏色是否有庫存（排除「我想體驗其他款式」選項）
             for (let color of selectedColors) {
+                if (color === 'all') {
+                    // 「我想體驗其他款式」選項不檢查庫存
+                    continue;
+                }
                 if (colorCounts[color] >= 50) {
                     const colorName = document.querySelector(`[data-color="${color}"]`).dataset.colorName;
                     alert(`${colorName}已預約額滿，請選擇其他顏色`);
@@ -941,6 +1040,9 @@
                 return document.querySelector(`[data-color="${color}"]`).dataset.colorName;
             });
             
+            // 獲取其他想說的內容，如果為空則設為"無"
+            const comments = document.getElementById('comments').value.trim() || '無';
+            
             const reservationData = {
                 number: reservationNumber,
                 order: reservationOrder, // 預約順序
@@ -952,6 +1054,7 @@
                 color: selectedColors[0], // 保留第一個顏色作為主要顏色（向後兼容）
                 colorName: colorNames.join('、'), // 所有顏色名稱用頓號連接
                 size: document.getElementById('size').value,
+                comments: comments, // 其他想說的內容
                 timestamp: new Date().toISOString()
             };
 
@@ -968,6 +1071,7 @@
                     <div><strong>姓名：</strong>${reservationData.name}</div>
                     <div><strong>顏色：</strong>${reservationData.colorName}</div>
                     <div><strong>尺寸：</strong>${reservationData.size}</div>
+                    <div><strong>我有其他想說的：</strong>${reservationData.comments || '無'}</div>
                 </div>
             `;
             document.getElementById('successPopup').style.display = 'flex';
@@ -982,6 +1086,7 @@
             document.getElementById('reservationForm').reset();
             colorCards.forEach(c => c.classList.remove('selected'));
             selectedColors = [];
+            updateSizeOptions(); // 重置尺寸選項
             
             // 滾動到頂部
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1026,7 +1131,7 @@
         // 發送 Email 通知
         function sendEmailNotification(reservationData, order) {
             const subject = encodeURIComponent('Feebees 限量跑鞋預約成功通知');
-            const body = encodeURIComponent(`親愛的 ${reservationData.name}，\n\n您的預約已成功！\n\n預約編號：${reservationData.number}\n預約順序：第 ${order} 位\n顏色：${reservationData.colorName}\n尺寸：${reservationData.size}\n\n請於展覽期間攜帶您的預約號碼牌至現場報到。\n選購順序以現場報到時間為準。\n\n預約體驗說明：\n• 現場以預約者為優先體驗，如未預約者需等候空檔時得以體驗。\n• 數量有限，以現場數量為主，如銷售完後可優先預訂。\n\n展場價特惠：NT$ 3,000（未來預計售價：NT$ 3,200）\n\n展覽資訊：\n時間：2025年12月18日(四) - 19日(五) 12PM~8PM，2025年12月20日(六) 10AM-6PM\n地點：花博爭豔館，台北市中山區玉門街 1 號\n攤位號碼：247、249、251\n\n感謝您的預約！\nFeebees 團隊`);
+            const body = encodeURIComponent(`親愛的 ${reservationData.name}，\n\n您的預約已成功！\n\n預約編號：${reservationData.number}\n預約順序：第 ${order} 位\n顏色：${reservationData.colorName}\n尺寸：${reservationData.size}\n我有其他想說的：${reservationData.comments || '無'}\n\n請於展覽期間攜帶您的預約號碼牌至現場報到。\n選購順序以現場報到時間為準。\n\n預約體驗說明：\n• 現場以預約者為優先體驗，如未預約者需等候空檔時得以體驗。\n• 數量有限，以現場數量為主，如銷售完後可優先預訂。\n\n展場價特惠：NT$ 3,000（未來預計售價：NT$ 3,200）\n\n展覽資訊：\n時間：2025年12月18日(四) - 19日(五) 12PM~8PM，2025年12月20日(六) 10AM-6PM\n地點：花博爭豔館，台北市中山區玉門街 1 號\n攤位號碼：247、249、251\n\n感謝您的預約！\nFeebees 團隊`);
             
             // 方法1: 使用 mailto 連結（開啟用戶的郵件客戶端）
             // 注意：這需要用戶有設定郵件客戶端，且可能不會自動發送
