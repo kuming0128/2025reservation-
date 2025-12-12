@@ -338,6 +338,10 @@
                         <div class="info-value" id="resultSize"></div>
                     </div>
                     <div class="info-item">
+                        <div class="info-label">我有其他想說的</div>
+                        <div class="info-value" id="resultComments"></div>
+                    </div>
+                    <div class="info-item">
                         <div class="info-label">預約時間</div>
                         <div class="info-value" id="resultTime"></div>
                     </div>
@@ -348,7 +352,7 @@
                     地點：花博爭豔館，台北市中山區玉門街 1 號
                 </p>
                 <button class="submit-btn" onclick="window.print()" style="margin-top: 20px;">列印號碼牌</button>
-                <a href="index.html" class="back-link">← 返回預約頁面</a>
+                <a href="index.html" class="back-link">← 返回首頁</a>
             </div>
 
             <div class="product-intro" id="productIntro" style="display: none;">
@@ -367,6 +371,20 @@
                     <a href="https://www.feebees.com.tw/categories/original-gradient" target="_blank" class="product-link">
                         了解更多產品詳情 →
                     </a>
+                </div>
+            </div>
+
+            <div class="bonus-info" id="bonusInfo" style="display: none; background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 140, 0, 0.15)); backdrop-filter: blur(20px); border-radius: 20px; padding: 25px; border: 2px solid rgba(255, 215, 0, 0.4); margin-top: 30px; margin-bottom: 30px;">
+                <h3 style="color: #FFD700; font-size: 22px; font-weight: bold; margin-bottom: 15px; text-align: center;">🎁 預約客優惠資訊</h3>
+                <p style="color: #fff; font-size: 16px; line-height: 1.8; margin-bottom: 20px; text-align: center;">
+                    預約到場購買任一鞋款，即贈以下好禮三選一：
+                </p>
+                <div style="background: rgba(0, 0, 0, 0.2); border-radius: 15px; padding: 20px; margin-top: 15px;">
+                    <ul style="color: #fff; line-height: 2.5; padding-left: 20px; list-style: none; margin: 0;">
+                        <li style="margin-bottom: 12px; font-size: 16px;">✓ <strong style="color: #FFD700;">流動衣</strong>（價值750元）</li>
+                        <li style="margin-bottom: 12px; font-size: 16px;">✓ <strong style="color: #FFD700;">輕壓縮襪</strong>（價值400元）</li>
+                        <li style="margin-bottom: 0; font-size: 16px;">✓ <strong style="color: #FFD700;">修護乳</strong>（價值550元）</li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -388,6 +406,7 @@
                 document.getElementById('errorMessage').style.display = 'none';
                 document.getElementById('resultSection').style.display = 'block';
                 document.getElementById('productIntro').style.display = 'block';
+                document.getElementById('bonusInfo').style.display = 'block';
 
                 // 顯示預約資訊
                 document.getElementById('resultNumber').textContent = reservation.number;
@@ -407,6 +426,7 @@
                         'silver': '太空銀',
                         'blue': '太空藍',
                         'pink': '太空粉',
+                        'all': '我想體驗其他款式',
                         'purple': '電光紫',
                         'gold': '流金'
                     };
@@ -415,6 +435,7 @@
                 document.getElementById('resultColor').textContent = colorDisplay || '未選擇';
                 
                 document.getElementById('resultSize').textContent = reservation.size;
+                document.getElementById('resultComments').textContent = reservation.comments || '無';
                 document.getElementById('resultTime').textContent = new Date(reservation.timestamp).toLocaleString('zh-TW');
             });
         </script>
