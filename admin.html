@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>預約管理後台 - Feebees</title>
+    <script>
+        // Google Sheets API 設定
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOy4atOt-luirXsUEsZIu3S1Lx5uY12DWqcoEkNCp1qr5-3Cuek-mmVdcdWOA7NjPj/exec';
+    </script>
     <style>
         * {
             margin: 0;
@@ -306,45 +310,67 @@
         let allReservations = [];
 
         // 載入預約資料
-        function loadReservations() {
+        async function loadReservations() {
             const statusDiv = document.getElementById('statusMessage');
             const statusText = document.getElementById('statusText');
             
             try {
-                const rawData = localStorage.getItem('reservations');
-                console.log('從 localStorage 讀取的原始資料:', rawData);
-                console.log('localStorage 是否可用:', typeof(Storage) !== "undefined");
-                
-                if (!rawData) {
-                    console.warn('localStorage 中沒有找到預約資料');
-                    allReservations = [];
+                // 先從 Google Sheets 載入（雲端資料）
+                try {
                     statusDiv.style.display = 'block';
-                    statusText.textContent = '⚠️ 目前沒有預約資料。請確認：1) 是否已在同一設備/瀏覽器上完成預約 2) localStorage 是否被清除';
-                    statusText.style.color = '#ff9999';
-                } else {
-                    allReservations = JSON.parse(rawData);
-                    console.log('解析後的預約資料:', allReservations);
-                    console.log('預約資料數量:', allReservations.length);
+                    statusText.textContent = '⏳ 正在從雲端載入資料...';
+                    statusText.style.color = '#FFD700';
                     
-                    // 檢查資料格式
-                    if (!Array.isArray(allReservations)) {
-                        console.error('預約資料格式錯誤，不是陣列:', typeof allReservations);
+                    const response = await fetch(GOOGLE_SCRIPT_URL);
+                    
+                    if (!response.ok) {
+                        throw new Error('無法連接到 Google Sheets: ' + response.status);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (Array.isArray(data)) {
+                        allReservations = data;
+                        console.log('從 Google Sheets 載入的預約資料:', allReservations);
+                        console.log('預約資料數量:', allReservations.length);
+                        
+                        // 同時更新 localStorage 作為快取
+                        try {
+                            localStorage.setItem('reservations', JSON.stringify(allReservations));
+                        } catch (e) {
+                            console.warn('無法更新 localStorage:', e);
+                        }
+                        
+                        if (allReservations.length === 0) {
+                            statusDiv.style.display = 'block';
+                            statusText.textContent = 'ℹ️ 目前沒有預約記錄';
+                            statusText.style.color = '#999';
+                        } else {
+                            statusDiv.style.display = 'block';
+                            statusText.textContent = `✅ 成功從雲端載入 ${allReservations.length} 筆預約資料`;
+                            statusText.style.color = '#4CAF50';
+                            setTimeout(() => {
+                                statusDiv.style.display = 'none';
+                            }, 3000);
+                        }
+                    } else {
+                        throw new Error('資料格式錯誤，不是陣列');
+                    }
+                } catch (fetchError) {
+                    console.warn('從 Google Sheets 載入失敗，嘗試從 localStorage 載入:', fetchError);
+                    
+                    // 如果 Google Sheets 載入失敗，從 localStorage 載入（備份）
+                    const rawData = localStorage.getItem('reservations');
+                    if (rawData) {
+                        allReservations = JSON.parse(rawData);
+                        statusDiv.style.display = 'block';
+                        statusText.textContent = '⚠️ 無法連接到雲端，顯示本地備份資料';
+                        statusText.style.color = '#ff9999';
+                    } else {
                         allReservations = [];
                         statusDiv.style.display = 'block';
-                        statusText.textContent = '❌ 預約資料格式錯誤';
-                        statusText.style.color = '#ff4444';
-                    } else if (allReservations.length === 0) {
-                        statusDiv.style.display = 'block';
-                        statusText.textContent = 'ℹ️ 目前沒有預約記錄';
-                        statusText.style.color = '#999';
-                    } else {
-                        statusDiv.style.display = 'block';
-                        statusText.textContent = `✅ 成功載入 ${allReservations.length} 筆預約資料`;
-                        statusText.style.color = '#4CAF50';
-                        // 3秒後隱藏成功訊息
-                        setTimeout(() => {
-                            statusDiv.style.display = 'none';
-                        }, 3000);
+                        statusText.textContent = '⚠️ 無法載入資料，請檢查網路連線';
+                        statusText.style.color = '#ff9999';
                     }
                 }
                 
