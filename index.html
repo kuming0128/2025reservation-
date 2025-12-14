@@ -1060,7 +1060,16 @@
 
             // 儲存到 localStorage
             reservations.push(reservationData);
-            localStorage.setItem('reservations', JSON.stringify(reservations));
+            try {
+                localStorage.setItem('reservations', JSON.stringify(reservations));
+                console.log('預約資料已成功儲存:', reservationData);
+                console.log('目前總預約數:', reservations.length);
+                console.log('localStorage 中的資料:', JSON.parse(localStorage.getItem('reservations') || '[]'));
+            } catch (error) {
+                console.error('儲存預約資料時發生錯誤:', error);
+                alert('儲存預約資料時發生錯誤，請重試或聯繫客服');
+                return;
+            }
 
             // 顯示成功彈窗
             document.getElementById('ticketNumber').textContent = reservationNumber;
@@ -1170,5 +1179,4 @@
     </script>
 </body>
 </html>
-
 
