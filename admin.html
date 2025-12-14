@@ -178,24 +178,24 @@
             color: #000;
         }
 
-        .badge-purple {
-            background: rgba(139, 76, 255, 0.3);
-            color: #B399DC;
-        }
-
         .badge-blue {
             background: rgba(65, 105, 225, 0.3);
             color: #87CEEB;
         }
 
-        .badge-gold {
-            background: rgba(255, 215, 0, 0.3);
-            color: #FFD700;
-        }
-
         .badge-silver {
             background: rgba(192, 192, 192, 0.3);
             color: #E8E8E8;
+        }
+
+        .badge-pink {
+            background: rgba(255, 192, 203, 0.3);
+            color: #FFB6C1;
+        }
+
+        .badge-all {
+            background: rgba(255, 215, 0, 0.3);
+            color: #FFD700;
         }
 
         .no-data {
@@ -245,13 +245,15 @@
                 <input type="text" class="form-input" id="searchInput" placeholder="搜尋姓名、手機、預約編號..." style="flex: 1; min-width: 200px;">
                 <select class="form-input" id="filterColor" style="min-width: 150px;">
                     <option value="">所有顏色</option>
-                    <option value="purple">電光紫</option>
-                    <option value="blue">深海藍</option>
-                    <option value="gold">流金</option>
-                    <option value="silver">銀河</option>
+                    <option value="silver">太空銀</option>
+                    <option value="blue">太空藍</option>
+                    <option value="pink">太空粉</option>
+                    <option value="all">我想體驗其他款式</option>
                 </select>
                 <select class="form-input" id="filterSize" style="min-width: 120px;">
                     <option value="">所有尺寸</option>
+                    <option value="23#">23#</option>
+                    <option value="24#">24#</option>
                     <option value="25#">25#</option>
                     <option value="26#">26#</option>
                     <option value="27#">27#</option>
@@ -268,19 +270,20 @@
             <table id="reservationsTable">
                 <thead>
                     <tr>
+                        <th>預約順序</th>
                         <th>預約編號</th>
                         <th>姓名</th>
                         <th>手機</th>
                         <th>Email</th>
                         <th>顏色</th>
                         <th>尺寸</th>
+                        <th>其他想說的</th>
                         <th>預約時間</th>
-                        <th>前50名</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
                     <tr>
-                        <td colspan="8" class="no-data">載入中...</td>
+                        <td colspan="9" class="no-data">載入中...</td>
                     </tr>
                 </tbody>
             </table>
@@ -302,6 +305,8 @@
         // 載入預約資料
         function loadReservations() {
             allReservations = JSON.parse(localStorage.getItem('reservations') || '[]');
+            console.log('載入的預約資料:', allReservations); // 除錯用
+            console.log('預約資料數量:', allReservations.length); // 除錯用
             updateStats();
             filterAndDisplay();
         }
@@ -309,13 +314,17 @@
         // 更新統計數據
         function updateStats() {
             const total = allReservations.length;
-            const top50 = allReservations.filter(r => r.isTop50).length;
             
-            const colorCounts = { purple: 0, blue: 0, gold: 0, silver: 0 };
+            // 修正：使用實際的顏色選項
+            const colorCounts = { silver: 0, blue: 0, pink: 0, all: 0 };
             allReservations.forEach(r => {
-                if (colorCounts[r.color] !== undefined) {
-                    colorCounts[r.color]++;
-                }
+                // 處理新的資料格式（支援 colors 數組）
+                const colors = Array.isArray(r.colors) ? r.colors : (r.color ? [r.color] : []);
+                colors.forEach(color => {
+                    if (colorCounts[color] !== undefined) {
+                        colorCounts[color]++;
+                    }
+                });
             });
 
             const statsHTML = `
@@ -324,24 +333,20 @@
                     <div class="stat-label">總預約數</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${top50}</div>
-                    <div class="stat-label">前50名</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${colorCounts.purple}</div>
-                    <div class="stat-label">電光紫</div>
+                    <div class="stat-value">${colorCounts.silver}</div>
+                    <div class="stat-label">太空銀</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value">${colorCounts.blue}</div>
-                    <div class="stat-label">深海藍</div>
+                    <div class="stat-label">太空藍</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${colorCounts.gold}</div>
-                    <div class="stat-label">流金</div>
+                    <div class="stat-value">${colorCounts.pink}</div>
+                    <div class="stat-label">太空粉</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${colorCounts.silver}</div>
-                    <div class="stat-label">銀河</div>
+                    <div class="stat-value">${colorCounts.all}</div>
+                    <div class="stat-label">其他款式</div>
                 </div>
             `;
 
@@ -361,14 +366,24 @@
                     r.number.toLowerCase().includes(searchTerm) ||
                     r.email.toLowerCase().includes(searchTerm);
                 
-                const matchColor = !filterColor || r.color === filterColor;
+                // 修正：處理新的資料格式（支援 colors 數組）
+                let matchColor = true;
+                if (filterColor) {
+                    const colors = Array.isArray(r.colors) ? r.colors : (r.color ? [r.color] : []);
+                    matchColor = colors.includes(filterColor);
+                }
+                
                 const matchSize = !filterSize || r.size === filterSize;
 
                 return matchSearch && matchColor && matchSize;
             });
 
-            // 按時間排序（最新的在前）
-            filtered.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            // 按預約順序排序（order 小的在前）
+            filtered.sort((a, b) => {
+                const orderA = a.order || 999999;
+                const orderB = b.order || 999999;
+                return orderA - orderB;
+            });
 
             displayTable(filtered);
         }
@@ -378,30 +393,43 @@
             const tbody = document.getElementById('tableBody');
             
             if (reservations.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="no-data">沒有找到預約記錄</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="no-data">沒有找到預約記錄</td></tr>';
                 return;
             }
 
+            const colorNames = {
+                silver: '太空銀',
+                blue: '太空藍',
+                pink: '太空粉',
+                all: '我想體驗其他款式'
+            };
+
             tbody.innerHTML = reservations.map(r => {
                 const date = new Date(r.timestamp);
-                const colorBadgeClass = `badge-${r.color}`;
-                const colorNames = {
-                    purple: '電光紫',
-                    blue: '深海藍',
-                    gold: '流金',
-                    silver: '銀河'
-                };
+                
+                // 使用 colorName（如果存在），否則從 colors 數組生成
+                let displayColor = r.colorName || '';
+                if (!displayColor && Array.isArray(r.colors)) {
+                    displayColor = r.colors.map(c => colorNames[c] || c).join('、');
+                } else if (!displayColor && r.color) {
+                    displayColor = colorNames[r.color] || r.color;
+                }
+
+                // 獲取第一個顏色用於 badge 樣式
+                const firstColor = Array.isArray(r.colors) ? r.colors[0] : (r.color || '');
+                const colorBadgeClass = firstColor ? `badge-${firstColor}` : '';
 
                 return `
                     <tr>
+                        <td><strong>第 ${r.order || '?'} 位</strong></td>
                         <td><strong>${r.number}</strong></td>
                         <td>${r.name}</td>
                         <td>${r.phone}</td>
                         <td>${r.email}</td>
-                        <td><span class="badge ${colorBadgeClass}">${colorNames[r.color] || r.colorName}</span></td>
+                        <td><span class="badge ${colorBadgeClass}">${displayColor}</span></td>
                         <td>${r.size}</td>
+                        <td>${r.comments || '無'}</td>
                         <td>${date.toLocaleString('zh-TW')}</td>
-                        <td>${r.isTop50 ? '<span class="badge badge-top50">是</span>' : '<span style="color: #999;">否</span>'}</td>
                     </tr>
                 `;
             }).join('');
@@ -414,21 +442,39 @@
                 return;
             }
 
-            const headers = ['預約編號', '姓名', '手機', 'Email', '顏色', '尺寸', '預約時間', '前50名'];
-            const rows = allReservations.map(r => [
-                r.number,
-                r.name,
-                r.phone,
-                r.email,
-                r.colorName,
-                r.size,
-                new Date(r.timestamp).toLocaleString('zh-TW'),
-                r.isTop50 ? '是' : '否'
-            ]);
+            const colorNames = {
+                silver: '太空銀',
+                blue: '太空藍',
+                pink: '太空粉',
+                all: '我想體驗其他款式'
+            };
+
+            const headers = ['預約順序', '預約編號', '姓名', '手機', 'Email', '顏色', '尺寸', '其他想說的', '預約時間'];
+            const rows = allReservations.map(r => {
+                // 處理顏色顯示
+                let displayColor = r.colorName || '';
+                if (!displayColor && Array.isArray(r.colors)) {
+                    displayColor = r.colors.map(c => colorNames[c] || c).join('、');
+                } else if (!displayColor && r.color) {
+                    displayColor = colorNames[r.color] || r.color;
+                }
+
+                return [
+                    r.order || '?',
+                    r.number,
+                    r.name,
+                    r.phone,
+                    r.email,
+                    displayColor,
+                    r.size,
+                    r.comments || '無',
+                    new Date(r.timestamp).toLocaleString('zh-TW')
+                ];
+            });
 
             const csvContent = [
                 headers.join(','),
-                ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+                ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
             ].join('\n');
 
             const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -479,8 +525,6 @@
     </script>
 </body>
 </html>
-
-
 
 
 
