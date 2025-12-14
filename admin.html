@@ -234,6 +234,9 @@
         <div class="header">
             <h1>📊 預約管理後台</h1>
             <p style="color: #999;">查看和管理所有預約記錄</p>
+            <div id="statusMessage" style="margin-top: 15px; padding: 10px; background: rgba(255, 215, 0, 0.1); border-radius: 10px; display: none;">
+                <p style="color: #FFD700; font-size: 14px; margin: 0;" id="statusText"></p>
+            </div>
         </div>
 
         <div class="stats-grid" id="statsGrid">
@@ -304,11 +307,58 @@
 
         // 載入預約資料
         function loadReservations() {
-            allReservations = JSON.parse(localStorage.getItem('reservations') || '[]');
-            console.log('載入的預約資料:', allReservations); // 除錯用
-            console.log('預約資料數量:', allReservations.length); // 除錯用
-            updateStats();
-            filterAndDisplay();
+            const statusDiv = document.getElementById('statusMessage');
+            const statusText = document.getElementById('statusText');
+            
+            try {
+                const rawData = localStorage.getItem('reservations');
+                console.log('從 localStorage 讀取的原始資料:', rawData);
+                console.log('localStorage 是否可用:', typeof(Storage) !== "undefined");
+                
+                if (!rawData) {
+                    console.warn('localStorage 中沒有找到預約資料');
+                    allReservations = [];
+                    statusDiv.style.display = 'block';
+                    statusText.textContent = '⚠️ 目前沒有預約資料。請確認：1) 是否已在同一設備/瀏覽器上完成預約 2) localStorage 是否被清除';
+                    statusText.style.color = '#ff9999';
+                } else {
+                    allReservations = JSON.parse(rawData);
+                    console.log('解析後的預約資料:', allReservations);
+                    console.log('預約資料數量:', allReservations.length);
+                    
+                    // 檢查資料格式
+                    if (!Array.isArray(allReservations)) {
+                        console.error('預約資料格式錯誤，不是陣列:', typeof allReservations);
+                        allReservations = [];
+                        statusDiv.style.display = 'block';
+                        statusText.textContent = '❌ 預約資料格式錯誤';
+                        statusText.style.color = '#ff4444';
+                    } else if (allReservations.length === 0) {
+                        statusDiv.style.display = 'block';
+                        statusText.textContent = 'ℹ️ 目前沒有預約記錄';
+                        statusText.style.color = '#999';
+                    } else {
+                        statusDiv.style.display = 'block';
+                        statusText.textContent = `✅ 成功載入 ${allReservations.length} 筆預約資料`;
+                        statusText.style.color = '#4CAF50';
+                        // 3秒後隱藏成功訊息
+                        setTimeout(() => {
+                            statusDiv.style.display = 'none';
+                        }, 3000);
+                    }
+                }
+                
+                updateStats();
+                filterAndDisplay();
+            } catch (error) {
+                console.error('載入預約資料時發生錯誤:', error);
+                allReservations = [];
+                statusDiv.style.display = 'block';
+                statusText.textContent = '❌ 載入預約資料時發生錯誤: ' + error.message;
+                statusText.style.color = '#ff4444';
+                updateStats();
+                filterAndDisplay();
+            }
         }
 
         // 更新統計數據
