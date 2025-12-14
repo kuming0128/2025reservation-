@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Feebees 馬拉松展創始款太空色搶先體驗預約</title>
+    <script>
+        // Google Sheets API 設定
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOy4atOt-luirXsUEsZIu3S1Lx5uY12DWqcoEkNCp1qr5-3Cuek-mmVdcdWOA7NjPj/exec';
+    </script>
     <style>
         * {
             margin: 0;
@@ -1058,18 +1062,26 @@
                 timestamp: new Date().toISOString()
             };
 
-            // 儲存到 localStorage
+            // 儲存到 localStorage（作為備份）
             reservations.push(reservationData);
             try {
                 localStorage.setItem('reservations', JSON.stringify(reservations));
-                console.log('預約資料已成功儲存:', reservationData);
+                console.log('預約資料已成功儲存到 localStorage:', reservationData);
                 console.log('目前總預約數:', reservations.length);
-                console.log('localStorage 中的資料:', JSON.parse(localStorage.getItem('reservations') || '[]'));
             } catch (error) {
-                console.error('儲存預約資料時發生錯誤:', error);
-                alert('儲存預約資料時發生錯誤，請重試或聯繫客服');
-                return;
+                console.error('儲存到 localStorage 時發生錯誤:', error);
             }
+
+            // 儲存到 Google Sheets（雲端同步）
+            saveToGoogleSheets(reservationData)
+                .then(response => {
+                    console.log('預約資料已成功同步到 Google Sheets:', response);
+                })
+                .catch(error => {
+                    console.error('同步到 Google Sheets 時發生錯誤:', error);
+                    // 如果 Google Sheets 儲存失敗，至少 localStorage 有備份
+                    // 不顯示錯誤訊息給用戶，避免影響使用體驗
+                });
 
             // 顯示成功彈窗
             document.getElementById('ticketNumber').textContent = reservationNumber;
@@ -1136,6 +1148,41 @@
             }
         }
         */
+
+        // 儲存到 Google Sheets
+        async function saveToGoogleSheets(reservationData) {
+            try {
+                // 使用表單提交方式避免 CORS 問題
+                const formData = new FormData();
+                formData.append('action', 'add');
+                formData.append('number', reservationData.number);
+                formData.append('order', reservationData.order);
+                formData.append('name', reservationData.name);
+                formData.append('phone', reservationData.phone);
+                formData.append('email', reservationData.email);
+                formData.append('colors', JSON.stringify(reservationData.colors));
+                formData.append('colorName', reservationData.colorName);
+                formData.append('size', reservationData.size);
+                formData.append('comments', reservationData.comments);
+                formData.append('timestamp', reservationData.timestamp);
+
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const result = await response.text();
+                    console.log('Google Sheets 儲存成功:', result);
+                    return { success: true };
+                } else {
+                    throw new Error('Google Sheets 回應錯誤: ' + response.status);
+                }
+            } catch (error) {
+                console.error('Google Sheets API 錯誤:', error);
+                throw error;
+            }
+        }
 
         // 發送 Email 通知
         function sendEmailNotification(reservationData, order) {
