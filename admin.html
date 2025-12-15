@@ -117,6 +117,16 @@
             border: 1px solid rgba(255, 68, 68, 0.3);
         }
 
+        .btn-danger:hover {
+            background: rgba(255, 68, 68, 0.3);
+            transform: scale(1.05);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
         .input-group {
             display: flex;
             gap: 10px;
@@ -286,11 +296,12 @@
                         <th>尺寸</th>
                         <th>其他想說的</th>
                         <th>預約時間</th>
+                        <th>操作</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
                     <tr>
-                        <td colspan="9" class="no-data">載入中...</td>
+                        <td colspan="10" class="no-data">載入中...</td>
                     </tr>
                 </tbody>
             </table>
@@ -469,7 +480,7 @@
             const tbody = document.getElementById('tableBody');
             
             if (reservations.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" class="no-data">沒有找到預約記錄</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" class="no-data">沒有找到預約記錄</td></tr>';
                 return;
             }
 
@@ -495,6 +506,10 @@
                 const firstColor = Array.isArray(r.colors) ? r.colors[0] : (r.color || '');
                 const colorBadgeClass = firstColor ? `badge-${firstColor}` : '';
 
+                // 使用手機號碼作為唯一識別（因為可能沒有唯一 ID）
+                const reservationPhone = (r.phone || '').replace(/'/g, "\\'");
+                const reservationName = (r.name || '').replace(/'/g, "\\'");
+                
                 return `
                     <tr>
                         <td><strong>第 ${r.order || '?'} 位</strong></td>
@@ -506,6 +521,9 @@
                         <td>${r.size}</td>
                         <td>${r.comments || '無'}</td>
                         <td>${date.toLocaleString('zh-TW')}</td>
+                        <td>
+                            <button class="btn btn-danger btn-small" onclick="deleteReservation('${reservationPhone}', '${reservationName}')" title="刪除此預約">刪除</button>
+                        </td>
                     </tr>
                 `;
             }).join('');
@@ -580,13 +598,112 @@
             window.print();
         }
 
+        // 刪除單筆預約
+        async function deleteReservation(phone, name) {
+            if (!confirm(`確定要刪除「${name}」的預約嗎？刪除後將自動重新計算所有預約的編號和順序。`)) {
+                return;
+            }
+
+            try {
+                // 從 Google Sheets 刪除
+                const params = new URLSearchParams();
+                params.append('action', 'delete');
+                params.append('phone', phone);
+
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    body: params.toString(),
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('預約已刪除，正在重新計算編號和順序...');
+                        // 重新計算並更新所有預約的編號和順序
+                        await reorderReservations();
+                        loadReservations();
+                    } else {
+                        alert('刪除失敗: ' + (result.message || '未知錯誤'));
+                    }
+                } else {
+                    throw new Error('刪除請求失敗: ' + response.status);
+                }
+            } catch (error) {
+                console.error('刪除預約時發生錯誤:', error);
+                alert('刪除預約時發生錯誤: ' + error.message);
+            }
+        }
+
+        // 重新計算並更新所有預約的編號和順序
+        async function reorderReservations() {
+            try {
+                const params = new URLSearchParams();
+                params.append('action', 'reorder');
+
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    body: params.toString(),
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        console.log('重新排序成功:', result.message);
+                        return true;
+                    } else {
+                        throw new Error(result.message || '重新排序失敗');
+                    }
+                } else {
+                    throw new Error('重新排序請求失敗: ' + response.status);
+                }
+            } catch (error) {
+                console.error('重新排序時發生錯誤:', error);
+                throw error;
+            }
+        }
+
         // 清除所有資料
-        function clearAllData() {
+        async function clearAllData() {
             if (confirm('確定要清除所有預約資料嗎？此操作無法復原！')) {
                 if (confirm('再次確認：確定要清除所有資料嗎？')) {
-                    localStorage.removeItem('reservations');
-                    alert('所有資料已清除');
-                    loadReservations();
+                    try {
+                        // 從 Google Sheets 清除
+                        const params = new URLSearchParams();
+                        params.append('action', 'clear');
+
+                        const response = await fetch(GOOGLE_SCRIPT_URL, {
+                            method: 'POST',
+                            body: params.toString(),
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            }
+                        });
+
+                        if (response.ok) {
+                            const result = await response.json();
+                            if (result.success) {
+                                localStorage.removeItem('reservations');
+                                alert('所有資料已清除');
+                                loadReservations();
+                            } else {
+                                alert('清除失敗: ' + (result.message || '未知錯誤'));
+                            }
+                        } else {
+                            throw new Error('清除請求失敗: ' + response.status);
+                        }
+                    } catch (error) {
+                        console.error('清除資料時發生錯誤:', error);
+                        // 如果 Google Sheets 清除失敗，至少清除 localStorage
+                        localStorage.removeItem('reservations');
+                        alert('本地資料已清除，但雲端清除可能失敗。錯誤: ' + error.message);
+                        loadReservations();
+                    }
                 }
             }
         }
