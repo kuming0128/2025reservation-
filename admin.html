@@ -507,8 +507,8 @@
                 const colorBadgeClass = firstColor ? `badge-${firstColor}` : '';
 
                 // 使用手機號碼作為唯一識別（因為可能沒有唯一 ID）
-                const reservationPhone = (r.phone || '').replace(/'/g, "\\'");
-                const reservationName = (r.name || '').replace(/'/g, "\\'");
+                const reservationPhone = String(r.phone || '').replace(/'/g, "\\'");
+                const reservationName = String(r.name || '').replace(/'/g, "\\'");
                 
                 return `
                     <tr>
